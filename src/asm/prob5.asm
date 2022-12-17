@@ -64,6 +64,8 @@ start:
     mov r10, 1                        ; Результат работы программы
     call init_array
     call make_even
+    mov eax, r10
+    ret
 
 
     
