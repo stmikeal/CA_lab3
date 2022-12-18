@@ -60,10 +60,10 @@ class Operation_jump(Enum):
 class TokenInfo:
     def __init__(self, pattern : str) -> None:
         self.pattern = pattern
-        self.regex   = compile('^' + pattern + '$')
+        self.regex   = compile('^(?:' + pattern + ')$')
 
 class Token(Enum):
-    number  : TokenInfo = TokenInfo(r'[1-9]\d*|0x(?:\d|[AaBbCcDdEeFf])+|0b[01]+')
+    number  : TokenInfo = TokenInfo(r'(?:[1-9]\d*|0)|0x(?:\d|[AaBbCcDdEeFf])+|0b[01]+')
     reg     : TokenInfo = TokenInfo(r'(eax)|(ebx)|(ecx)|(edx)|(esi)|(edi)|(esp)|(eip)|(r8)|(r9)|(r10)|(r11)|(r12)|(r13)|(r14)|(r15)')
     op0     : TokenInfo = TokenInfo(r"(ret)|(nop)")
     s_op1   : TokenInfo = TokenInfo(r"(push)|(mul)|(div)|(test)")
@@ -71,6 +71,9 @@ class Token(Enum):
     op2     : TokenInfo = TokenInfo(r"(mov)|(add)|(sub)|(cmp)|(xor)|(and)|(or)")
     jump_op : TokenInfo = TokenInfo(r"(jmp)|(je)|(jne)|(jg)|(jl)|(jng)|(jnl)|(loop)|(call)")
     string  : TokenInfo = TokenInfo(r"[a-zA-Z]\w*")
+
+macro_regex = compile(r"^%define .+$")
+pointer_regex = compile(r"^\w+\s+dd\s+[1-9]\d*$")
 
 token_func : dict[Token : Enum] = {
     Token.reg       : Register,
