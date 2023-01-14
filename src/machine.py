@@ -4,7 +4,7 @@ from enum import Enum
 from isa import _NUMBER_MASK, DataCell, read_program_file, read_input_file, parse_command_from_raw, \
     parse_data_from_raw, Opcode, Mapping
 
-OUTPUT_BUFFER_SIZE = 5
+OUTPUT_BUFFER_SIZE = 20
 EXECUTE_LIMIT = 4000
 
 
@@ -12,13 +12,14 @@ class SigAccCode(Enum):
     ALU = 0
     MEM = 1
     RAW = 2
+    INC = 3
 
 
 class SigAddrCode(Enum):
     RAW = 0
     RD = 1
     PRT = 2
-
+    REL = 3
 
 class SigIpCode(Enum):
     INC = 0
@@ -33,6 +34,7 @@ class SigStepCode(Enum):
 class SigArgCode(Enum):
     RAW = 0
     MEM = 1
+    ZERO = 2
 
 
 class Machine:
@@ -74,15 +76,18 @@ class Machine:
         if input_string is None:
             input_string = []
         self._rd = len(self._memory)
-        self._memory += [DataCell(val) for val in input_string] + [DataCell(0)]
+        self._memory += [DataCell(val) for val in input_string]
 
     def set_pointers(self, pointers: dict = None):
         if pointers is None:
             pointers = []
         if not self._pointers:
             for pointer in pointers:
+                data = parse_data_from_raw(pointers[pointer])
                 self._pointers[pointer] = len(self._memory)
-                self._memory += parse_data_from_raw(pointers[pointer])
+                if len(data) > 1:
+                    self._memory.append(DataCell(len(self._memory)))
+                self._memory += data
 
     def tick(self):
         self._tick += 1
@@ -96,12 +101,13 @@ class Machine:
     def represent_output(self):
         res = []
         self._wr -= 1
-        while self._memory[self._wr].value:
+        for p in range(self._output_buffer_counter):
+            if not self._memory[self._wr - p].value:
+                continue
             if 0 <= self._memory[self._wr].value <= 255:
-                res.append(chr(self._memory[self._wr].value))
+                res = [chr(self._memory[self._wr - p].value)] + res
             else:
-                res.append(self._memory[self._wr].value)
-            self._wr -= 1
+                res = [self._memory[self._wr - p].value] + res
         return res
 
     def __div__(self, arg, acc):
@@ -115,8 +121,10 @@ class Machine:
             Opcode.mul: lambda arg, acc: arg * acc,
             Opcode.div: lambda arg, acc: self.__div__(arg, acc)
         }
-        operand = int(self._memory[self._ip].operand) if sig_arg == SigArgCode.RAW else self._memory[self._addr].value
-        operand &= _NUMBER_MASK
+        operand = 0
+        if sig_arg != SigArgCode.ZERO:
+            operand = int(self._memory[self._ip].operand) if sig_arg == SigArgCode.RAW else self._memory[self._addr].value
+            operand &= _NUMBER_MASK
         return alu_operations[operation](operand, self._acc)
 
     def set_flags(self, value, operation: Opcode = Opcode.add):
@@ -125,8 +133,10 @@ class Machine:
         self._zero = value & _NUMBER_MASK == 0
         self._positive = value >= 0
 
-    def latch_acc(self, sig_acc: SigAccCode, sig_arg: SigArgCode = SigArgCode.RAW, operation: Opcode = Opcode.hlt):
+    def latch_acc(self, sig_acc: SigAccCode, sig_arg: SigArgCode = SigArgCode.RAW, operation: Opcode = Opcode.add):
         res = 0
+        if sig_acc == SigAccCode.INC:
+            res = self._acc + 1
         if sig_acc == SigAccCode.ALU:
             res = self.alu_calculate(sig_arg, operation)
         elif sig_acc == SigAccCode.MEM:
@@ -134,7 +144,8 @@ class Machine:
         elif sig_acc == SigAccCode.RAW:
             res = int(self._memory[self._ip].operand)
         self._acc = res & _NUMBER_MASK
-        self.set_flags(res, operation)
+        if sig_acc == SigAccCode.ALU:
+            self.set_flags(res, operation)
 
     def latch_addr(self, sig_addr=SigAddrCode.RAW):
         if sig_addr == SigAddrCode.RAW:
@@ -145,6 +156,8 @@ class Machine:
         if sig_addr == SigAddrCode.PRT:
             self._addr = self._wr
             self._wr += 1
+        if sig_addr == SigAddrCode.REL:
+            self._addr = self._memory[self._addr].value
 
     def latch_step_counter(self, sig_step):
         self._step_counter = 0 if sig_step == SigStepCode.ZERO else self._step_counter + 1
@@ -237,6 +250,39 @@ class Machine:
                 self.latch_addr(SigAddrCode.PRT)
                 self.latch_step_counter(SigStepCode.INC)
             else:
+                self.latch_mem()
+                self.latch_step_counter(SigStepCode.ZERO)
+                self._output_buffer_counter += 1
+                if self._output_buffer_counter > OUTPUT_BUFFER_SIZE:
+                    raise OverflowError("Output buffer is crowded")
+                self.latch_ip(SigIpCode.INC)
+
+        if operation == Opcode.pprt:
+            if self._step_counter == 0:
+                self.latch_addr()
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 1:
+                self.latch_acc(SigAccCode.MEM)
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 2:
+                self.latch_acc(SigAccCode.INC)
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 3:
+                self.latch_mem()
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 4:
+                self.latch_addr(SigAddrCode.REL)
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 5:
+                self.latch_acc(SigAccCode.MEM)
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 6:
+                self.latch_acc(SigAccCode.ALU, SigArgCode.ZERO)
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 7:
+                self.latch_addr(SigAddrCode.PRT)
+                self.latch_step_counter(SigStepCode.INC)
+            elif self._step_counter == 8:
                 self.latch_mem()
                 self.latch_step_counter(SigStepCode.ZERO)
                 self._output_buffer_counter += 1

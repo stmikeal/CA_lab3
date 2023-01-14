@@ -25,6 +25,7 @@ class Opcode(Enum):
     jg: int = 13
     jl: int = 14
     jc: int = 15
+    pprt: int = 16
 
 
 class Mapping(Enum):

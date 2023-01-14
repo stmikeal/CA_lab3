@@ -3,6 +3,7 @@
     prime  1
     target 0
     count  0
+    hw 'hw'
 .text:
     .start:
         rd 
