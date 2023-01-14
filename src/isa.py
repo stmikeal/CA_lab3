@@ -34,8 +34,11 @@ class Mapping(Enum):
 
 
 class DataCell:
-    def __init__(self, value=randint(-_MAX_NUMBER, _MAX_NUMBER)) -> None:
-        self.value = value
+    def __init__(self, value=None) -> None:
+        if value is None:
+            self.value = randint(-_MAX_NUMBER, _MAX_NUMBER)
+        else:
+            self.value = value
         self.operand: Optional[str] = None
         self.operation: Optional[Opcode] = None
         self.type: Optional[Mapping] = None

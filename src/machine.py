@@ -4,8 +4,8 @@ from enum import Enum
 from isa import _NUMBER_MASK, DataCell, read_program_file, read_input_file, parse_command_from_raw, \
     parse_data_from_raw, Opcode, Mapping
 
-OUTPUT_BUFFER_SIZE = 100
-EXECUTE_LIMIT = 256
+OUTPUT_BUFFER_SIZE = 5
+EXECUTE_LIMIT = 4000
 
 
 class SigAccCode(Enum):
@@ -74,7 +74,7 @@ class Machine:
         if input_string is None:
             input_string = []
         self._rd = len(self._memory)
-        self._memory += [DataCell(val) for val in input_string]
+        self._memory += [DataCell(val) for val in input_string] + [DataCell(0)]
 
     def set_pointers(self, pointers: dict = None):
         if pointers is None:
@@ -94,28 +94,36 @@ class Machine:
         return self._ic
 
     def represent_output(self):
-        res = ""
+        res = []
         self._wr -= 1
         while self._memory[self._wr].value:
-            res += chr(self._memory[self._wr].value)
+            if 0 <= self._memory[self._wr].value <= 255:
+                res.append(chr(self._memory[self._wr].value))
+            else:
+                res.append(self._memory[self._wr].value)
             self._wr -= 1
         return res
 
-    __alu_operations = {
-        Opcode.add: lambda arg, acc: arg + acc,
-        Opcode.sub: lambda arg, acc: arg - acc,
-        Opcode.mul: lambda arg, acc: arg * acc,
-        Opcode.div: lambda arg, acc: arg // acc
-    }
+    def __div__(self, arg, acc):
+        self._carry = acc % arg != 0
+        return acc // arg
 
     def alu_calculate(self, sig_arg, operation):
-        arg = self._memory[self._ip if sig_arg == SigArgCode.RAW else self._addr].value & _NUMBER_MASK
-        return self.__alu_operations[operation](arg, self._acc)
+        alu_operations = {
+            Opcode.add: lambda arg, acc: arg + acc,
+            Opcode.sub: lambda arg, acc: acc - arg,
+            Opcode.mul: lambda arg, acc: arg * acc,
+            Opcode.div: lambda arg, acc: self.__div__(arg, acc)
+        }
+        operand = int(self._memory[self._ip].operand) if sig_arg == SigArgCode.RAW else self._memory[self._addr].value
+        operand &= _NUMBER_MASK
+        return alu_operations[operation](operand, self._acc)
 
-    def set_flags(self, value):
-        self._carry = value & _NUMBER_MASK != value
+    def set_flags(self, value, operation: Opcode = Opcode.add):
+        if operation != Opcode.div:
+            self._carry = value & _NUMBER_MASK != value
         self._zero = value & _NUMBER_MASK == 0
-        self._positive = value & _NUMBER_MASK >= 0
+        self._positive = value >= 0
 
     def latch_acc(self, sig_acc: SigAccCode, sig_arg: SigArgCode = SigArgCode.RAW, operation: Opcode = Opcode.hlt):
         res = 0
@@ -124,9 +132,9 @@ class Machine:
         elif sig_acc == SigAccCode.MEM:
             res = self._memory[self._addr].value
         elif sig_acc == SigAccCode.RAW:
-            res = self._memory[self._ip].value
+            res = int(self._memory[self._ip].operand)
         self._acc = res & _NUMBER_MASK
-        self.set_flags(res)
+        self.set_flags(res, operation)
 
     def latch_addr(self, sig_addr=SigAddrCode.RAW):
         if sig_addr == SigAddrCode.RAW:
@@ -188,9 +196,19 @@ class Machine:
                 self.latch_ip(SigIpCode.INC)
 
         if operation == Opcode.cmp:
-            res = self.alu_calculate(SigArgCode.RAW if command.type == Mapping.data else SigArgCode.MEM, Opcode.sub)
-            self.set_flags(res)
-            self.latch_ip(SigIpCode.INC)
+            if command.type == Mapping.pointer:
+                if not self._step_counter:
+                    self.latch_addr()
+                    self.latch_step_counter(SigStepCode.INC)
+                else:
+                    res = self.alu_calculate(SigArgCode.MEM, Opcode.sub)
+                    self.set_flags(res)
+                    self.latch_step_counter(SigStepCode.ZERO)
+                    self.latch_ip(SigIpCode.INC)
+            else:
+                res = self.alu_calculate(SigArgCode.RAW, Opcode.sub)
+                self.set_flags(res)
+                self.latch_ip(SigIpCode.INC)
 
         if operation in self.__op_arithmetic:
             if command.type == Mapping.pointer:
@@ -202,7 +220,7 @@ class Machine:
                     self.latch_step_counter(SigStepCode.ZERO)
                     self.latch_ip(SigIpCode.INC)
             else:
-                self.latch_acc(SigAccCode.RAW)
+                self.latch_acc(SigAccCode.ALU, SigArgCode.RAW, operation)
                 self.latch_ip(SigIpCode.INC)
 
         if operation == Opcode.rd:
@@ -235,21 +253,21 @@ class Machine:
 
     def __str__(self):
         return "TICK: {}, ADDR: {}, IP: {}, ACC: {}, ZCP: {}, SC: {}, WR: {}, RD: {}\nOP: {}, ARG: {}, T: {}, D: {}".format(
-                   self._tick,
-                   self._addr,
-                   self._ip,
-                   self._acc,
-                   self.__bool_to_char(self._zero) \
-                   + self.__bool_to_char(self._carry) \
-                   + self.__bool_to_char(self._positive),
-                   self._step_counter,
-                   self._wr,
-                   self._rd,
-                   self._memory[self._ip].operation.name,
-                   self._memory[self._ip].operand,
-                   self._memory[self._ip].type.name,
-                   self._memory[self._ip].value,
-               )
+            self._tick,
+            self._addr,
+            self._ip,
+            self._acc,
+            self.__bool_to_char(self._zero) \
+            + self.__bool_to_char(self._carry) \
+            + self.__bool_to_char(self._positive),
+            self._step_counter,
+            self._wr,
+            self._rd,
+            self._memory[self._ip].operation.name,
+            self._memory[self._ip].operand,
+            self._memory[self._ip].type.name,
+            self._memory[self._ip].value,
+        )
 
 
 def simulate(model: Machine) -> tuple:
