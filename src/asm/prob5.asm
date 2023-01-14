@@ -20,6 +20,7 @@
         sv count
         cmp 1
         je .mul_to_max
+        ld prime
         div count
         jc .inner_loop
         jmp .loop
@@ -35,4 +36,6 @@
         sv result
         jmp .loop
     .hlt:
+        ld result
+        prt
         hlt
