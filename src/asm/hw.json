@@ -1,0 +1,31 @@
+{
+  "labels": {
+    "0": 0,
+    "1": 3
+  },
+  "pointers": {
+    "0": "Hello, World!"
+  },
+  "program": [
+    {
+      "operation": "pprt",
+      "operand": "0",
+      "type": "pointer"
+    },
+    {
+      "operation": "je",
+      "operand": "1",
+      "type": "label"
+    },
+    {
+      "operation": "jmp",
+      "operand": "0",
+      "type": "label"
+    },
+    {
+      "operation": "hlt",
+      "operand": "None",
+      "type": "data"
+    }
+  ]
+}
