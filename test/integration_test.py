@@ -32,7 +32,7 @@ class TestTranslator(unittest.TestCase):
             translator.main([0, source, target])
             machine.prepare_and_go([0, target, input_file])
 
-        self.assertEqual(stdout.getvalue(),"Output: ['C', 'A', 'T']\nInstruction Counter: 15\nTicks: 24\n")
+        self.assertEqual(stdout.getvalue(), "Output: ['C', 'A', 'T']\nInstruction Counter: 15\nTicks: 24\n")
 
     def test_func(self):
         source = "asm/func.asm"
