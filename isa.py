@@ -1,3 +1,8 @@
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-module-docstring
+# pylint: disable=line-too-long
+# pylint: disable=too-few-public-methods)
 from json import loads, dumps
 from enum import Enum
 from typing import Optional
@@ -9,29 +14,29 @@ _NUMBER_MASK = 2 ** 64 - 1
 
 
 class Opcode(Enum):
-    hlt: int = 0
-    ld: int = 1
-    sv: int = 2
-    prt: int = 3
-    rd: int = 4
-    add: int = 5
-    sub: int = 6
-    mul: int = 7
-    div: int = 8
-    cmp: int = 9
-    jmp: int = 10
-    je: int = 11
-    jne: int = 12
-    jg: int = 13
-    jl: int = 14
-    jc: int = 15
-    pprt: int = 16
+    HLT: int = 0
+    LD: int = 1
+    SV: int = 2
+    PRT: int = 3
+    RD: int = 4
+    ADD: int = 5
+    SUB: int = 6
+    MUL: int = 7
+    DIV: int = 8
+    CMP: int = 9
+    JMP: int = 10
+    JE: int = 11
+    JNE: int = 12
+    JG: int = 13
+    JL: int = 14
+    JC: int = 15
+    PPRT: int = 16
 
 
 class Mapping(Enum):
-    data: int = 0
-    pointer: int = 1
-    label: int = 2
+    DATA: int = 0
+    POINTER: int = 1
+    LABEL: int = 2
 
 
 class DataCell:
@@ -46,26 +51,25 @@ class DataCell:
 
     def __str__(self) -> str:
         if not self.type:
-            self.type = Mapping.data
+            self.type = Mapping.DATA
         if not self.operation:
-            return '"value":"{}"'.format(self.value)
-        return '"operation":"{}","operand":"{}","type":"{}"'.format(self.operation, self.operand, self.type.name)
+            return f'"value":"{self.value}"'
+        return f'"operation":"{self.operation}","operand":"{self.operand}","type":"{self.type.name}"'
 
 
 def parse_data_from_raw(raw) -> Optional[list[DataCell]]:
-    if type(raw) is int:
+    if isinstance(raw, int):
         return [DataCell(raw)]
-    elif type(raw) is str:
+    if isinstance(raw, str):
         return [DataCell(ord(char)) for char in raw] + [DataCell(0)]
-    else:
-        return None
+    return None
 
 
 def parse_command_from_raw(raw: dict) -> DataCell:
     command = DataCell()
     command.operand = raw['operand'] if raw['operand'] != 'None' else None
     for operation in Opcode.__iter__():
-        if operation.name == raw['operation']:
+        if operation.name.lower() == raw['operation']:
             command.operation = operation
     for mapping in Mapping.__iter__():
         if mapping.name == raw['type']:
@@ -74,17 +78,17 @@ def parse_command_from_raw(raw: dict) -> DataCell:
 
 
 def write_program_file(filename, program):
-    with open(filename, "w") as file:
+    with open(filename, "w", encoding='utf-8') as file:
         file.write(dumps(program, indent=4))
 
 
 def read_program_file(filename):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding='utf-8') as file:
         program = loads(file.read())
         return program
 
 
 def read_input_file(filename):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding='utf-8') as file:
         input_file = loads(file.read())
         return input_file

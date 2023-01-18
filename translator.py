@@ -2,26 +2,26 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-module-docstring
 # pylint: disable=line-too-long
-from enum import Enum
-from typing import Union
-from isa import Opcode, DataCell, Mapping
 from io import TextIOWrapper
 from re import Match, sub, match
 from sys import argv
+from enum import Enum
+from typing import Union
+from isa import Opcode, DataCell, Mapping
 
-single_opcode = [Opcode.prt, Opcode.rd, Opcode.hlt]
+single_opcode = [Opcode.PRT, Opcode.RD, Opcode.HLT]
 
 
 class Token(Enum):
-    command: str = r"^(" + "|".join(op.name for op in Opcode.__iter__() if op not in single_opcode) + \
-                   r")\s+(\@?|#?)(0|[1-9]\d*)|(" + "|".join(op.name for op in single_opcode) + ")$"
-    label: str = r"^(\.[a-zA-Z]\w*)\:$"
-    pointer: str = r"^(\w+)\s+(0|[1-9]\d*|(?:\'.+\'))$"
+    COMMAND: str = r"^(" + "|".join(op.name.lower() for op in Opcode.__iter__() if op not in single_opcode) + \
+                   r")\s+(\@?|#?)(0|[1-9]\d*)|(" + "|".join(op.name.lower() for op in single_opcode) + ")$"
+    LABEL: str = r"^(\.[a-zA-Z]\w*)\:$"
+    POINTER: str = r"^(\w+)\s+(0|[1-9]\d*|(?:\'.+\'))$"
 
 
 class SysLabel(Enum):
-    data = ".data"
-    programm = ".text"
+    DATA = ".data"
+    PROGRAMM = ".text"
 
 
 class Translator:
@@ -29,17 +29,17 @@ class Translator:
         self.program_section: int = -1
         self.labels = []
         self.pointers = []
-        self.pvalues = dict()
-        self.lvalues = dict()
+        self.pvalues = {}
+        self.lvalues = {}
         self.program: list[DataCell] = []
 
     def __insert_mapping(self, line: str) -> str:
         line = line.split()
         if len(line) == 2:
-            for nlabel in range(len(self.labels)):
+            for nlabel, _ in enumerate(self.labels):
                 if line[1] == self.labels[nlabel]:
                     line[1] = "#" + str(nlabel)
-            for npointer in range(len(self.pointers)):
+            for npointer, _ in enumerate(self.pointers):
                 if line[1] == self.pointers[npointer]:
                     line[1] = "@" + str(npointer)
         return " ".join(line)
@@ -61,30 +61,30 @@ class Translator:
         for line in file:
             line_counter += 1
             line = self._trim_line(line)
-            if not line or not len(line):
+            if not line:
                 continue
             line = self.parse_line(line)
             if not line:
                 continue
 
-            if line["token"] == Token.label:
-                if not current_section and line["match"].groups()[0] == SysLabel.data.value:
-                    current_section = SysLabel.data
+            if line["token"] == Token.LABEL:
+                if not current_section and line["match"].groups()[0] == SysLabel.DATA.value:
+                    current_section = SysLabel.DATA
                     continue
-                elif current_section != SysLabel.programm and line["match"].groups()[0] == SysLabel.programm.value:
-                    current_section = SysLabel.programm
+                if current_section != SysLabel.PROGRAMM and line["match"].groups()[0] == SysLabel.PROGRAMM.value:
+                    current_section = SysLabel.PROGRAMM
                     self.program_section = line_counter
                     continue
 
-            if current_section == SysLabel.data:
+            if current_section == SysLabel.DATA:
                 if line["match"].groups()[0] not in self.pointers:
                     self.pointers.append(line["match"].groups()[0])
                     val = line["match"].groups()[1]
                     self.pvalues[str(len(self.pointers)-1)] = int(val) if val[0] != "'" else val
                 else:
-                    raise SyntaxError("Not unique pointer at line: {}".format(str(line_counter)))
+                    raise SyntaxError(f"Not unique pointer at line: {str(line_counter)}")
 
-            if line["token"] == Token.label:
+            if line["token"] == Token.LABEL:
                 self.labels.append(line["match"].groups()[0])
 
     def parse_file(self, file: TextIOWrapper) -> None:
@@ -97,23 +97,23 @@ class Translator:
         for line in lines[self.program_section:]:
             line_counter += 1
             line = self._trim_line(line)
-            if not line or not len(line):
+            if not line:
                 continue
             line = self.parse_line(line)
 
-            if not line or line["token"] == Token.pointer:
-                raise SyntaxError("Syntax Error at line: {}".format(str(line_counter)))
+            if not line or line["token"] == Token.POINTER:
+                raise SyntaxError(f"Syntax Error at line: {str(line_counter)}")
 
-            if line["token"] == Token.label:
+            if line["token"] == Token.LABEL:
                 self.lvalues[str(self.labels.index(line["match"].groups()[0]))] = instruction_counter
 
-            if line["token"] == Token.command:
+            if line["token"] == Token.COMMAND:
                 command: DataCell = DataCell()
-                type = line["match"].groups()[0]
-                command.operation = line["match"].groups()[0 if type else 3]
-                if type:
-                    command.type = (Mapping.label if line["match"].groups()[1] == '#' else Mapping.pointer) if len(
-                        line["match"].groups()[1]) else Mapping.data
+                type_of_programm = line["match"].groups()[0]
+                command.operation = line["match"].groups()[0 if type_of_programm else 3]
+                if type_of_programm:
+                    command.type = (Mapping.LABEL if line["match"].groups()[1] == '#' else Mapping.POINTER) if len(
+                        line["match"].groups()[1]) else Mapping.DATA
                     command.operand = line["match"].groups()[2]
                 self.program.append(command)
                 instruction_counter += 1
@@ -123,17 +123,17 @@ class Translator:
     def __str__(self) -> str:
         labels: str = str(self.lvalues).replace("'", '"')
         pointers = "{" + ", ".join('"' + p_key + '"' + ": " + str(p_value).replace("'", '"') for p_key, p_value in self.pvalues.items()) + "}"
-        program: str = "[{}]".format(", ".join(["{" + "{}".format(str(p)) + "}" for p in self.program]))
-        return "{" + '"labels":{},"pointers":{},"program":{}'.format(labels, pointers, program) + "}"
+        program: str = f'[{", ".join(["{" + f"{str(p)}" + "}" for p in self.program])}]'
+        return "{" + f'"labels":{labels},"pointers":{pointers},"program":{program}' + "}"
 
 
 def main(arg):
-    t = Translator()
+    trans = Translator()
     if len(arg) == 3:
-        with open(arg[1], "r") as f:
-            t.parse_file(f)
-        with open(arg[2], "w") as f:
-            f.write(str(t))
+        with open(arg[1], "r", encoding='utf-8') as output_file:
+            trans.parse_file(output_file)
+        with open(arg[2], "w", encoding='utf-8') as output_file:
+            output_file.write(str(trans))
     else:
         raise AttributeError("Need 2 files to read and to write.")
 
