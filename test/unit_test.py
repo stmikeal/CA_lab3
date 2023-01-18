@@ -11,7 +11,7 @@ class TestTranslator(unittest.TestCase):
 
     def test_translation_func(self):
         t = translator.Translator()
-        with open("src/asm/func.asm", "r") as file:
+        with open("asm/func.asm", "r") as file:
             t.parse_file(file)
 
         self.assertEqual(t.labels, ['.start', '.hlt'])
@@ -21,7 +21,7 @@ class TestTranslator(unittest.TestCase):
 
     def test_translation_prob5(self):
         t = translator.Translator()
-        with open("src/asm/prob5.asm", "r") as file:
+        with open("asm/prob5.asm", "r") as file:
             t.parse_file(file)
 
         self.assertEqual(t.labels, ['.start', '.loop', '.inner_loop', '.mul_to_max', '.mul_loop', '.hlt'])

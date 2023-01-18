@@ -139,7 +139,7 @@
 
 Интерфейс командной строки: `translator.py <input_file> <output_file>`
 
-Реализовано в модуле: [translator](src/translator.py)
+Реализовано в модуле: [translator](translator.py)
 
 Этапы трансляции:
 1. Поиск секций, меток и указателей по файлу.
@@ -150,7 +150,7 @@
 
 Интерфейс командной строки: `machine.py <parsed_file> [input_file]`
 
-Реализовано в модуле: [machine](src/machine.py)
+Реализовано в модуле: [machine](machine.py)
 
 Было принято решение не разделять DataPath и ControlUnit.
 
@@ -184,10 +184,10 @@
 
 Для тестов использовано несколько алгоритмов:
 
-1. [Hello World](src/asm/hw.asm)
-2. [Cat](src/asm/cat.asm)
-3. [Math Function](src/asm/func.asm)
-4. [5th Euler's Problem](src/asm/prob5.asm)
+1. [Hello World](asm/hw.asm)
+2. [Cat](asm/cat.asm)
+3. [Math Function](asm/func.asm)
+4. [5th Euler's Problem](asm/prob5.asm)
 
 Интеграционные тесты реализованы в модуле: [Integration test](test/integration_test.py)
 Unit-тесты реализованы в модуле: [Unit test](test/unit_test.py)
@@ -215,7 +215,7 @@ lab3-example:
   - `--explicit-package-bases` и `--namespace-packages` -- помогает правильно искать импортированные модули.
 - Docker image `python-tools` включает в себя все перечисленные утилиты. Его конфигурация: [Dockerfile](./Dockerfile).
 
-Пример использования и журнал работы процессора на примере [Cat](src/asm/cat.asm):
+Пример использования и журнал работы процессора на примере [Cat](asm/cat.asm):
 
 ```example
 $ cat input_files/cat.input 

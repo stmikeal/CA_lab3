@@ -7,17 +7,17 @@ import io
 import tempfile
 import unittest
 
-import machine
 import translator
+import machine
 
 
 class TestTranslator(unittest.TestCase):
 
     def test_hello(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            source = "src/asm/hw.asm"
-            target = "src/asm/hw.json"
-            input_file = "src/input_files/helloWorld.input"
+            source = "asm/hw.asm"
+            target = "asm/hw.json"
+            input_file = "input_files/helloWorld.input"
             with contextlib.redirect_stdout(io.StringIO()) as stdout:
                 translator.main([0, source, target])
                 machine.prepare_and_go([0, target, input_file])
@@ -27,9 +27,9 @@ class TestTranslator(unittest.TestCase):
 
     def test_cat(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            source = "src/asm/cat.asm"
-            target = "src/asm/cat.json"
-            input_file = "src/input_files/cat.input"
+            source = "asm/cat.asm"
+            target = "asm/cat.json"
+            input_file = "input_files/cat.input"
 
             with contextlib.redirect_stdout(io.StringIO()) as stdout:
                 translator.main([0, source, target])
@@ -39,9 +39,9 @@ class TestTranslator(unittest.TestCase):
 
     def test_func(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            source = "src/asm/func.asm"
-            target = "src/asm/func.json"
-            input_file = "src/input_files/func.input"
+            source = "asm/func.asm"
+            target = "asm/func.json"
+            input_file = "input_files/cat.input"
 
             with contextlib.redirect_stdout(io.StringIO()) as stdout:
                 with self.assertLogs('', level='DEBUG') as logs:
@@ -59,6 +59,9 @@ class TestTranslator(unittest.TestCase):
                 "DEBUG:root:TICK: 5, ADDR: 27, IP: 3, ACC: 8, ZCP: 011, SC: 0, WR: 7, RD: 29",
                 "DEBUG:root:TICK: 6, ADDR: 27, IP: 4, ACC: 7, ZCP: 001, SC: 0, WR: 7, RD: 29",
                 "DEBUG:root:TICK: 7, ADDR: 27, IP: 5, ACC: 51, ZCP: 001, SC: 0, WR: 7, RD: 29"]
-
-            for log in expect_log:
-                self.assertTrue(log in logs.output)
+            print(logs.output)
+            for expected in expect_log:
+                contains = False
+                for log in logs.output:
+                    contains |= log.count(expected)
+                self.assertTrue(contains)

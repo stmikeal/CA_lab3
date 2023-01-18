@@ -130,9 +130,9 @@ class Translator:
 def main(arg):
     t = Translator()
     if len(arg) == 3:
-        with open(argv[1], "r") as f:
+        with open(arg[1], "r") as f:
             t.parse_file(f)
-        with open(argv[2], "w") as f:
+        with open(arg[2], "w") as f:
             f.write(str(t))
     else:
         raise AttributeError("Need 2 files to read and to write.")
