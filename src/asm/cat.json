@@ -1,0 +1,34 @@
+{
+  "labels": {
+    "0": 0,
+    "1": 4
+  },
+  "pointers": {},
+  "program": [
+    {
+      "operation": "rd",
+      "operand": "None",
+      "type": "data"
+    },
+    {
+      "operation": "prt",
+      "operand": "None",
+      "type": "data"
+    },
+    {
+      "operation": "je",
+      "operand": "1",
+      "type": "label"
+    },
+    {
+      "operation": "jmp",
+      "operand": "0",
+      "type": "label"
+    },
+    {
+      "operation": "hlt",
+      "operand": "None",
+      "type": "data"
+    }
+  ]
+}

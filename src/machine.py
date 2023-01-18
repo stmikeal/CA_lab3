@@ -1,3 +1,7 @@
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-module-docstring
+# pylint: disable=line-too-long
 import logging
 import sys
 from enum import Enum
@@ -20,6 +24,7 @@ class SigAddrCode(Enum):
     RD = 1
     PRT = 2
     REL = 3
+
 
 class SigIpCode(Enum):
     INC = 0
@@ -76,7 +81,7 @@ class Machine:
         if input_string is None:
             input_string = []
         self._rd = len(self._memory)
-        self._memory += [DataCell(val) for val in input_string]
+        self._memory += [DataCell(val) for val in input_string] + [DataCell(0)]
 
     def set_pointers(self, pointers: dict = None):
         if pointers is None:
@@ -242,6 +247,7 @@ class Machine:
                 self.latch_step_counter(SigStepCode.INC)
             else:
                 self.latch_acc(SigAccCode.MEM)
+                self.set_flags(self._acc)
                 self.latch_step_counter(SigStepCode.ZERO)
                 self.latch_ip(SigIpCode.INC)
 

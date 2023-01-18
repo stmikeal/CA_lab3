@@ -1,1 +1,164 @@
-{"labels":{"0": 0, "1": 2, "2": 8, "3": 17, "4": 18, "5": 26},"pointers":{"0": 1, "1": 1, "2": 0, "3": 0, "4": "hw"},"program":[{"operation":"rd","operand":"None","type":"data"}, {"operation":"sv","operand":"2","type":"pointer"}, {"operation":"ld","operand":"1","type":"pointer"}, {"operation":"add","operand":"1","type":"data"}, {"operation":"cmp","operand":"2","type":"pointer"}, {"operation":"je","operand":"5","type":"label"}, {"operation":"sv","operand":"1","type":"pointer"}, {"operation":"sv","operand":"3","type":"pointer"}, {"operation":"ld","operand":"3","type":"pointer"}, {"operation":"sub","operand":"1","type":"data"}, {"operation":"sv","operand":"3","type":"pointer"}, {"operation":"cmp","operand":"1","type":"data"}, {"operation":"je","operand":"3","type":"label"}, {"operation":"ld","operand":"1","type":"pointer"}, {"operation":"div","operand":"3","type":"pointer"}, {"operation":"jc","operand":"2","type":"label"}, {"operation":"jmp","operand":"1","type":"label"}, {"operation":"ld","operand":"1","type":"data"}, {"operation":"mul","operand":"1","type":"pointer"}, {"operation":"cmp","operand":"2","type":"pointer"}, {"operation":"jl","operand":"4","type":"label"}, {"operation":"je","operand":"4","type":"label"}, {"operation":"div","operand":"1","type":"pointer"}, {"operation":"mul","operand":"0","type":"pointer"}, {"operation":"sv","operand":"0","type":"pointer"}, {"operation":"jmp","operand":"1","type":"label"}, {"operation":"ld","operand":"0","type":"pointer"}, {"operation":"prt","operand":"None","type":"data"}, {"operation":"hlt","operand":"None","type":"data"}]}
+{
+  "labels": {
+    "0": 0,
+    "1": 2,
+    "2": 8,
+    "3": 17,
+    "4": 18,
+    "5": 26
+  },
+  "pointers": {
+    "0": 1,
+    "1": 1,
+    "2": 0,
+    "3": 0,
+    "4": "hw"
+  },
+  "program": [
+    {
+      "operation": "rd",
+      "operand": "None",
+      "type": "data"
+    },
+    {
+      "operation": "sv",
+      "operand": "2",
+      "type": "pointer"
+    },
+    {
+      "operation": "ld",
+      "operand": "1",
+      "type": "pointer"
+    },
+    {
+      "operation": "add",
+      "operand": "1",
+      "type": "data"
+    },
+    {
+      "operation": "cmp",
+      "operand": "2",
+      "type": "pointer"
+    },
+    {
+      "operation": "je",
+      "operand": "5",
+      "type": "label"
+    },
+    {
+      "operation": "sv",
+      "operand": "1",
+      "type": "pointer"
+    },
+    {
+      "operation": "sv",
+      "operand": "3",
+      "type": "pointer"
+    },
+    {
+      "operation": "ld",
+      "operand": "3",
+      "type": "pointer"
+    },
+    {
+      "operation": "sub",
+      "operand": "1",
+      "type": "data"
+    },
+    {
+      "operation": "sv",
+      "operand": "3",
+      "type": "pointer"
+    },
+    {
+      "operation": "cmp",
+      "operand": "1",
+      "type": "data"
+    },
+    {
+      "operation": "je",
+      "operand": "3",
+      "type": "label"
+    },
+    {
+      "operation": "ld",
+      "operand": "1",
+      "type": "pointer"
+    },
+    {
+      "operation": "div",
+      "operand": "3",
+      "type": "pointer"
+    },
+    {
+      "operation": "jc",
+      "operand": "2",
+      "type": "label"
+    },
+    {
+      "operation": "jmp",
+      "operand": "1",
+      "type": "label"
+    },
+    {
+      "operation": "ld",
+      "operand": "1",
+      "type": "data"
+    },
+    {
+      "operation": "mul",
+      "operand": "1",
+      "type": "pointer"
+    },
+    {
+      "operation": "cmp",
+      "operand": "2",
+      "type": "pointer"
+    },
+    {
+      "operation": "jl",
+      "operand": "4",
+      "type": "label"
+    },
+    {
+      "operation": "je",
+      "operand": "4",
+      "type": "label"
+    },
+    {
+      "operation": "div",
+      "operand": "1",
+      "type": "pointer"
+    },
+    {
+      "operation": "mul",
+      "operand": "0",
+      "type": "pointer"
+    },
+    {
+      "operation": "sv",
+      "operand": "0",
+      "type": "pointer"
+    },
+    {
+      "operation": "jmp",
+      "operand": "1",
+      "type": "label"
+    },
+    {
+      "operation": "ld",
+      "operand": "0",
+      "type": "pointer"
+    },
+    {
+      "operation": "prt",
+      "operand": "None",
+      "type": "data"
+    },
+    {
+      "operation": "hlt",
+      "operand": "None",
+      "type": "data"
+    }
+  ]
+}

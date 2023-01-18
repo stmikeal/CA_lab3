@@ -1,3 +1,7 @@
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-module-docstring
+# pylint: disable=line-too-long
 from enum import Enum
 from typing import Union
 from isa import Opcode, DataCell, Mapping
@@ -49,7 +53,7 @@ class Translator:
         return None
 
     def _trim_line(self, line: str) -> str:
-        return sub(r"^\s+", "", sub(r"\s+$", "", sub(r"\s+", " ", line)))
+        return sub(r"//.*", "", sub(r"^\s+", "", sub(r"\s+$", "", sub(r"\s+", " ", line))))
 
     def __file_analize(self, file: list[str]) -> None:
         line_counter: int = 0
@@ -123,12 +127,16 @@ class Translator:
         return "{" + '"labels":{},"pointers":{},"program":{}'.format(labels, pointers, program) + "}"
 
 
-if __name__ == "__main__":
+def main(arg):
     t = Translator()
-    if len(argv) == 3:
+    if len(arg) == 3:
         with open(argv[1], "r") as f:
             t.parse_file(f)
         with open(argv[2], "w") as f:
             f.write(str(t))
     else:
         raise AttributeError("Need 2 files to read and to write.")
+
+
+if __name__ == "__main__":
+    main(argv)
