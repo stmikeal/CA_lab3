@@ -80,7 +80,7 @@ class Translator:
                 if line["match"].groups()[0] not in self.pointers:
                     self.pointers.append(line["match"].groups()[0])
                     val = line["match"].groups()[1]
-                    self.pvalues[str(len(self.pointers)-1)] = int(val) if val[0] != "'" else val
+                    self.pvalues[str(len(self.pointers) - 1)] = int(val) if val[0] != "'" else val
                 else:
                     raise SyntaxError(f"Not unique pointer at line: {str(line_counter)}")
 
