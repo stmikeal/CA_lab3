@@ -24,6 +24,10 @@ class SysLabel(Enum):
     PROGRAMM = ".text"
 
 
+def trim_line(line: str) -> str:
+    return sub(r"//.*", "", sub(r"^\s+", "", sub(r"\s+$", "", sub(r"\s+", " ", line))))
+
+
 class Translator:
     def __init__(self) -> None:
         self.program_section: int = -1
@@ -52,15 +56,12 @@ class Translator:
                 return {"token": token, "match": matched}
         return None
 
-    def _trim_line(self, line: str) -> str:
-        return sub(r"//.*", "", sub(r"^\s+", "", sub(r"\s+$", "", sub(r"\s+", " ", line))))
-
     def __file_analize(self, file: list[str]) -> None:
         line_counter: int = 0
         current_section: SysLabel = None
         for line in file:
             line_counter += 1
-            line = self._trim_line(line)
+            line = trim_line(line)
             if not line:
                 continue
             line = self.parse_line(line)
@@ -96,7 +97,7 @@ class Translator:
         instruction_counter: int = 0
         for line in lines[self.program_section:]:
             line_counter += 1
-            line = self._trim_line(line)
+            line = trim_line(line)
             if not line:
                 continue
             line = self.parse_line(line)

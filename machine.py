@@ -46,6 +46,10 @@ class SigArgCode(Enum):
     ZERO = 2
 
 
+def bool_to_char(flag: bool):
+    return "1" if flag else "0"
+
+
 class Machine:
     def __init__(self, code):
         # Инициализация регистров
@@ -304,12 +308,9 @@ class Machine:
             return False
         return True
 
-    def __bool_to_char(self, flag: bool):
-        return "1" if flag else "0"
-
     def __str__(self):
         return f"TICK: {self._tick}, ADDR: {self._addr}, IP: {self._ip}, ACC: {self._acc}, " + \
-               f"ZCP: {self.__bool_to_char(self._zero) + self.__bool_to_char(self._carry) + self.__bool_to_char(self._positive)}, " + \
+               f"ZCP: {bool_to_char(self._zero) + bool_to_char(self._carry) + bool_to_char(self._positive)}, " + \
                f"SC: {self._step_counter}, WR: {self._wr}, RD: {self._rd}\nOP: {self._memory[self._ip].operation.name}, " + \
                f"ARG: {self._memory[self._ip].operand}, T: {self._memory[self._ip].type.name}, D: {self._memory[self._ip].value}"
 
