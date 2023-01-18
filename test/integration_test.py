@@ -15,9 +15,9 @@ class TestTranslator(unittest.TestCase):
 
     def test_hello(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            source = "asm/hw.asm"
-            target = "asm/hw.json"
-            input_file = "input_files/helloWorld.input"
+            source = "src/asm/hw.asm"
+            target = "src/asm/hw.json"
+            input_file = "src/input_files/helloWorld.input"
             with contextlib.redirect_stdout(io.StringIO()) as stdout:
                 translator.main([0, source, target])
                 machine.prepare_and_go([0, target, input_file])
@@ -27,9 +27,9 @@ class TestTranslator(unittest.TestCase):
 
     def test_cat(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            source = "asm/cat.asm"
-            target = "asm/cat.json"
-            input_file = "input_files/cat.input"
+            source = "src/asm/cat.asm"
+            target = "src/asm/cat.json"
+            input_file = "src/input_files/cat.input"
 
             with contextlib.redirect_stdout(io.StringIO()) as stdout:
                 translator.main([0, source, target])
@@ -37,11 +37,11 @@ class TestTranslator(unittest.TestCase):
 
             self.assertEqual(stdout.getvalue(),"Output: ['C', 'A', 'T']\nInstruction Counter: 15\nTicks: 24\n")
 
-    def test_cat_trace(self):
+    def test_func(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
-            source = "asm/func.asm"
-            target = "asm/func.json"
-            input_file = "input_files/func.input"
+            source = "src/asm/func.asm"
+            target = "src/asm/func.json"
+            input_file = "src/input_files/func.input"
 
             with contextlib.redirect_stdout(io.StringIO()) as stdout:
                 with self.assertLogs('', level='DEBUG') as logs:

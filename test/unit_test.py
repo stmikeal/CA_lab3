@@ -9,46 +9,22 @@ import translator
 
 class TestTranslator(unittest.TestCase):
 
-    def test_translation_many_add(self):
+    def test_translation_func(self):
         t = translator.Translator()
-        with open("examples/many_add_test.lisp", "rt", encoding="utf-8") as file:
-            text = file.read()
+        with open("src/asm/func.asm", "r") as file:
+            t.parse_file(file)
 
-        code = translator.translate(text)
-        print(code)
-        self.assertEqual([{'opcode': 'movv', 'arg': [0, 1]},
-                          {'opcode': 'movv', 'arg': [1, 2]},
-                          {'opcode': 'movv', 'arg': [2, 3]},
-                          {'opcode': 'movv', 'arg': [3, 4]},
-                          {'opcode': 'movv', 'arg': [4, 0]},
-                          {'opcode': 'add', 'arg': [0, 1, 2, 3]},
-                          {'opcode': 'mov', 'arg': [4]},
-                          {'opcode': 'print', 'arg': [4]},
-                          {'opcode': 'halt'}],
-                         code)
+        self.assertEqual(t.labels, ['.start', '.hlt'])
+        self.assertEqual(t.lvalues, {'0': 0, '1': 5})
+        self.assertEqual(t.pointers, ['one', 'two', 'tt'])
+        self.assertEqual(t.program_section, 5)
 
-    def test_translation_err1(self):
-        with open("examples/err1.lisp", "rt", encoding="utf-8") as file:
-            text = file.read()
+    def test_translation_prob5(self):
+        t = translator.Translator()
+        with open("src/asm/prob5.asm", "r") as file:
+            t.parse_file(file)
 
-        try:
-            translator.translate(text)
-            self.fail('validator verification test 1 failed')
-        except AssertionError:
-            isa_const.deep = 0
-            isa_const.code.clear()
-            isa_const.terms.clear()
-            isa_const.term_number = 0
-
-    def test_translation_err2(self):
-        with open("examples/err2.lisp", "rt", encoding="utf-8") as file:
-            text = file.read()
-
-        try:
-            translator.translate(text)
-            self.fail('validator verification test 2 failed')
-        except AssertionError:
-            isa_const.deep = 0
-            isa_const.code.clear()
-            isa_const.terms.clear()
-            isa_const.term_number = 0
+        self.assertEqual(t.labels, ['.start', '.loop', '.inner_loop', '.mul_to_max', '.mul_loop', '.hlt'])
+        self.assertEqual(t.lvalues, {'0': 0, '1': 2, '2': 8, '3': 17, '4': 18, '5': 26})
+        self.assertEqual(t.pointers, ['result', 'prime', 'target', 'count'])
+        self.assertEqual(t.program_section, 6)

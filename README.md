@@ -21,7 +21,7 @@
 
 ``` ebnf
 <Program>  := ".data:" <Pointers> ".text:" <Commands>
-           | ".text" <Commands>
+           | ".text:" <Commands>
           
 <Pointers> := ""
            | <Pointer> <Pointers>
@@ -179,3 +179,117 @@
 + Количество исполненных операций ограничено константой.
 + Остановка модуляции определяется по возвращаемому значению функции.
 + Запуск симуляции происходит при вызове функции `simulate`.
+
+## Апробация
+
+Для тестов использовано несколько алгоритмов:
+
+1. [Hello World](src/asm/hw.asm)
+2. [Cat](src/asm/cat.asm)
+3. [Math Function](src/asm/func.asm)
+4. [5th Euler's Problem](src/asm/prob5.asm)
+
+Интеграционные тесты реализованы в модуле: [Integration test](test/integration_test.py)
+Unit-тесты реализованы в модуле: [Unit test](test/unit_test.py)
+
+CL:
+```yaml
+lab3-example:
+  stage: test
+  image:
+    name: python-tools
+    entrypoint: [""]
+  script:
+    - python3-coverage run -m pytest --verbose
+    - find . -type f -name "*.py" | xargs -t python3-coverage report
+    - find . -type f -name "*.py" | xargs -t pep8 --ignore=E501
+    - find . -type f -name "*.py" | xargs -t pylint
+```
+где:
+- `python3-coverage` -- формирование отчёта об уровне покрытия исходного кода.
+- `pytest` -- утилита для запуска тестов.
+- `pep8` -- утилита для проверки форматирования кода. `E501` (длина строк) отключено.
+- `pylint` -- утилита для проверки качества кода. Некоторые правила отключены в отдельных модулях с целью упрощения кода.
+- `mypy` -- утилита для проверки корректности статической типизации.
+  - `--check-untyped-defs` -- дополнительная проверка.
+  - `--explicit-package-bases` и `--namespace-packages` -- помогает правильно искать импортированные модули.
+- Docker image `python-tools` включает в себя все перечисленные утилиты. Его конфигурация: [Dockerfile](./Dockerfile).
+
+Пример использования и журнал работы процессора на примере [Cat](src/asm/cat.asm):
+
+```example
+$ cat input_files/cat.input 
+[67, 65, 84]
+$ cat asm/cat.asm
+.data:
+.text:
+    .start:
+        rd
+        prt
+        je .hlt
+        jmp .start
+    .hlt:
+        hlt
+$ python translator.py asm/cat.asm asm/cat.json
+$ cat asm/cat.json
+{"labels":{"0": 0, "1": 4},"pointers":{},"program":[{"operation":"rd","operand":"None","type":"data"}, {"operation":"prt","operand":"None","type":"data"}, {"operation":"je","ope
+rand":"1","type":"label"}, {"operation":"jmp","operand":"0","type":"label"}, {"operation":"hlt","operand":"None","type":"data"}]}
+$ python machine.py asm/cat.json input_files/cat.input 
+DEBUG:root:TICK: 0, ADDR: 0, IP: 0, ACC: 0, ZCP: 101, SC: 0, WR: 6, RD: 25
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 1, ADDR: 25, IP: 0, ACC: 0, ZCP: 101, SC: 1, WR: 6, RD: 26
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 2, ADDR: 25, IP: 1, ACC: 67, ZCP: 001, SC: 0, WR: 6, RD: 26
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 3, ADDR: 6, IP: 1, ACC: 67, ZCP: 001, SC: 1, WR: 7, RD: 26
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 4, ADDR: 6, IP: 2, ACC: 67, ZCP: 001, SC: 0, WR: 7, RD: 26
+OP: je, ARG: 1, T: label, D: -3479038006839116491
+DEBUG:root:TICK: 5, ADDR: 6, IP: 3, ACC: 67, ZCP: 001, SC: 0, WR: 7, RD: 26
+OP: jmp, ARG: 0, T: label, D: -5865404304628819528
+DEBUG:root:TICK: 6, ADDR: 6, IP: 0, ACC: 67, ZCP: 001, SC: 0, WR: 7, RD: 26
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 7, ADDR: 26, IP: 0, ACC: 67, ZCP: 001, SC: 1, WR: 7, RD: 27
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 8, ADDR: 26, IP: 1, ACC: 65, ZCP: 001, SC: 0, WR: 7, RD: 27
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 9, ADDR: 7, IP: 1, ACC: 65, ZCP: 001, SC: 1, WR: 8, RD: 27
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 10, ADDR: 7, IP: 2, ACC: 65, ZCP: 001, SC: 0, WR: 8, RD: 27
+OP: je, ARG: 1, T: label, D: -3479038006839116491
+DEBUG:root:TICK: 11, ADDR: 7, IP: 3, ACC: 65, ZCP: 001, SC: 0, WR: 8, RD: 27
+OP: jmp, ARG: 0, T: label, D: -5865404304628819528
+DEBUG:root:TICK: 12, ADDR: 7, IP: 0, ACC: 65, ZCP: 001, SC: 0, WR: 8, RD: 27
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 13, ADDR: 27, IP: 0, ACC: 65, ZCP: 001, SC: 1, WR: 8, RD: 28
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 14, ADDR: 27, IP: 1, ACC: 84, ZCP: 001, SC: 0, WR: 8, RD: 28
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 15, ADDR: 8, IP: 1, ACC: 84, ZCP: 001, SC: 1, WR: 9, RD: 28
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 16, ADDR: 8, IP: 2, ACC: 84, ZCP: 001, SC: 0, WR: 9, RD: 28
+OP: je, ARG: 1, T: label, D: -3479038006839116491
+DEBUG:root:TICK: 17, ADDR: 8, IP: 3, ACC: 84, ZCP: 001, SC: 0, WR: 9, RD: 28
+OP: jmp, ARG: 0, T: label, D: -5865404304628819528
+DEBUG:root:TICK: 18, ADDR: 8, IP: 0, ACC: 84, ZCP: 001, SC: 0, WR: 9, RD: 28
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 19, ADDR: 28, IP: 0, ACC: 84, ZCP: 001, SC: 1, WR: 9, RD: 29
+OP: rd, ARG: None, T: data, D: -8565524770379116096
+DEBUG:root:TICK: 20, ADDR: 28, IP: 1, ACC: 0, ZCP: 101, SC: 0, WR: 9, RD: 29
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 21, ADDR: 9, IP: 1, ACC: 0, ZCP: 101, SC: 1, WR: 10, RD: 29
+OP: prt, ARG: None, T: data, D: 6034870251380461023
+DEBUG:root:TICK: 22, ADDR: 9, IP: 2, ACC: 0, ZCP: 101, SC: 0, WR: 10, RD: 29
+OP: je, ARG: 1, T: label, D: -3479038006839116491
+DEBUG:root:TICK: 23, ADDR: 9, IP: 4, ACC: 0, ZCP: 101, SC: 0, WR: 10, RD: 29
+OP: hlt, ARG: None, T: data, D: 7112050030747962257
+Output: ['C', 'A', 'T']
+Instruction Counter: 15
+Ticks: 24
+```
+
+| ФИО               | алг.  | LoC | code байт | code инстр. | инстр. | такт. | вариант |
+|-------------------|-------|-----|-----------|-------------|--------|-------|---------|
+| Степанов М. А.    | hello | 9   | -         | 9           | 41     | 154   | -       |
+| Степанов М. А.    | cat   | 9   | -         | 9           | 15     | 24    | -       |
+| Степанов М. А.    | prob5 | 41  | -         | 41          | 1242   | 1885  | -       |
