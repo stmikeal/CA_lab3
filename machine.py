@@ -8,8 +8,9 @@
 # pylint: disable=too-many-statements
 import logging
 import sys
+from math import copysign
 from enum import Enum
-from isa import _NUMBER_MASK, DataCell, read_program_file, read_input_file, parse_command_from_raw, \
+from isa import _NUMBER_MASK, _MAX_NUMBER, DataCell, read_program_file, read_input_file, parse_command_from_raw, \
     parse_data_from_raw, Opcode, Mapping
 
 OUTPUT_BUFFER_SIZE = 20
@@ -137,13 +138,13 @@ class Machine:
         operand = 0
         if sig_arg != SigArgCode.ZERO:
             operand = int(self._memory[self._ip].operand) if sig_arg == SigArgCode.RAW else self._memory[self._addr].value
-            operand &= _NUMBER_MASK
+            operand = copysign(abs(operand) & _NUMBER_MASK, operand)
         return alu_operations[operation](operand, self._acc)
 
     def set_flags(self, value, operation: Opcode = Opcode.ADD):
         if operation != Opcode.DIV:
-            self._carry = value & _NUMBER_MASK != value
-        self._zero = value & _NUMBER_MASK == 0
+            self._carry = abs(int(value)) > _MAX_NUMBER
+        self._zero = copysign(abs(int(value)) & _NUMBER_MASK, value) == 0
         self._positive = value >= 0
 
     def latch_acc(self, sig_acc: SigAccCode, sig_arg: SigArgCode = SigArgCode.RAW, operation: Opcode = Opcode.ADD):
@@ -156,13 +157,16 @@ class Machine:
             res = self._memory[self._addr].value
         elif sig_acc == SigAccCode.RAW:
             res = int(self._memory[self._ip].operand)
-        self._acc = res & _NUMBER_MASK
+        if abs(res) > _MAX_NUMBER:
+            self._acc = int(copysign(abs(int(res)) & _NUMBER_MASK, res))
+        else:
+            self._acc = int(res)
         if sig_acc == SigAccCode.ALU:
             self.set_flags(res, operation)
 
     def latch_addr(self, sig_addr=SigAddrCode.RAW):
         if sig_addr == SigAddrCode.RAW:
-            self._addr = self._pointers[self._memory[self._ip].operand] & _NUMBER_MASK
+            self._addr = abs(self._pointers[self._memory[self._ip].operand]) & _NUMBER_MASK
         if sig_addr == SigAddrCode.RD:
             self._addr = self._rd
             self._rd += 1
