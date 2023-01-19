@@ -30,7 +30,10 @@
            | <Word> "'" <Word> "'"
         
 <Commands> := ""
+           | <Command> <Comment> <Commands>
            | <Command> <Commands>
+           
+<Comment>  := "//" <Word>
            
 <Command> := <Op0>
            | <Op1> <Number>
