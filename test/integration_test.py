@@ -55,7 +55,7 @@ class TestTranslator(unittest.TestCase):
             "DEBUG:root:TICK: 5, ADDR: 27, IP: 3, ACC: 8, ZCP: 011, SC: 0, WR: 7, RD: 29",
             "DEBUG:root:TICK: 6, ADDR: 27, IP: 4, ACC: 7, ZCP: 001, SC: 0, WR: 7, RD: 29",
             "DEBUG:root:TICK: 7, ADDR: 27, IP: 5, ACC: 51, ZCP: 001, SC: 0, WR: 7, RD: 29"]
-        print(logs.output)
+
         for expected in expect_log:
             contains = False
             for log in logs.output:
